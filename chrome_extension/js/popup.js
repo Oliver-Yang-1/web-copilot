@@ -15,26 +15,58 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Handle send button click
+  // Chat history map
+  let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || {};
+
+  // Get elements
+  const chatArea = document.getElementById('chat-area');
+  const userInput = document.querySelector("input[type='text']");
   const sendButton = document.querySelector(".send-button");
-  if (sendButton) {
-    sendButton.addEventListener("click", function () {
-      const userOrderInput = document.querySelector("input[type='text']");
-      if (!userOrderInput || !userOrderInput.value) {
-        alert("Please enter a task.");
-        return;
-      }
 
-      const serverAddress = localStorage.getItem('serverAddress');
-      if (!serverAddress) {
-        alert("Server address not set. Please go to settings to configure.");
-        return;
-      }
+  // Get the tag name dynamically based on the current active page's URL
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    const tagName = tabs[0].url;
 
-      const userOrder = userOrderInput.value;
+    // Load chat history for the current tag
+    if (chatHistory[tagName]) {
+      chatHistory[tagName].forEach(entry => {
+        const [sender, message] = entry;
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${sender === 'user' ? 'user' : ''}`;
+        messageDiv.textContent = message;
+        chatArea.appendChild(messageDiv);
+      });
+    }
 
-      // Send a message to the content script to get the HTML of the current active page
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    // Handle send button click
+    if (sendButton) {
+      sendButton.addEventListener("click", function () {
+        if (!userInput || !userInput.value) {
+          alert("Please enter a task.");
+          return;
+        }
+
+        const serverAddress = localStorage.getItem('serverAddress');
+        if (!serverAddress) {
+          alert("Server address not set. Please go to settings to configure.");
+          return;
+        }
+
+        const userOrder = userInput.value;
+
+        // Append user message to chat area
+        const userMessageDiv = document.createElement('div');
+        userMessageDiv.className = 'chat-message user';
+        userMessageDiv.textContent = userOrder;
+        chatArea.appendChild(userMessageDiv);
+
+        // Save user message to chat history
+        if (!chatHistory[tagName]) {
+          chatHistory[tagName] = [];
+        }
+        chatHistory[tagName].push(['user', userOrder]);
+
+        // Send a message to the content script to get the HTML of the current active page
         chrome.scripting.executeScript({
           target: { tabId: tabs[0].id },
           func: () => document.documentElement.outerHTML
@@ -62,6 +94,21 @@ document.addEventListener("DOMContentLoaded", function () {
               const result = await apiResponse.json();
               alert(`Response: ${result.response}`);
 
+              // Append system response to chat area
+              const systemMessageDiv = document.createElement('div');
+              systemMessageDiv.className = 'chat-message';
+              systemMessageDiv.textContent = result.response;
+              chatArea.appendChild(systemMessageDiv);
+
+// Save system message to chat history
+              chatHistory[tagName].push(['system', result.response]);
+
+// Save updated chat history to localStorage
+              localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+
+              // Save updated chat history to localStorage
+              localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+
               if (result.script) {
                 chrome.scripting.executeScript({
                   target: { tabId: tabs[0].id },
@@ -71,12 +118,39 @@ document.addEventListener("DOMContentLoaded", function () {
             } else {
               const error = await apiResponse.json();
               alert(`Error: ${error.error}`);
+
+// Append error response to chat area
+              const errorMessageDiv = document.createElement('div');
+              errorMessageDiv.className = 'chat-message';
+              errorMessageDiv.textContent = `Error: ${error.error}`;
+              chatArea.appendChild(errorMessageDiv);
+
+// Save error message to chat history
+              chatHistory[tagName].push(['system', `Error: ${error.error}`]);
+
+// Save updated chat history to localStorage
+              localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
             }
           } catch (error) {
             alert("Failed to connect to the server. Please check your server address and internet connection.");
+
+// Append connection error message to chat area
+            const connectionErrorDiv = document.createElement('div');
+            connectionErrorDiv.className = 'chat-message';
+            connectionErrorDiv.textContent = "Failed to connect to the server. Please check your server address and internet connection.";
+            chatArea.appendChild(connectionErrorDiv);
+
+// Save connection error message to chat history
+            chatHistory[tagName].push(['system', "Failed to connect to the server. Please check your server address and internet connection."]);
+
+// Save updated chat history to localStorage
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
           }
         });
+
+        // Clear user input
+        userInput.value = "";
       });
-    });
-  }
+    }
+  });
 });
