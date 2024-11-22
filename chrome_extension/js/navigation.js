@@ -1,9 +1,11 @@
+// navigation.js
 document.addEventListener("DOMContentLoaded", function () {
-  // Navigate back to the chatting page
   const backButton = document.getElementById('back-button');
   if (backButton) {
     backButton.addEventListener('click', function () {
-      window.location.href = './popup.html';
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabUrl = urlParams.get('tabUrl');
+      window.location.href = './popup.html' + (tabUrl ? '?tabUrl=' + encodeURIComponent(tabUrl) : '');
     });
   }
 });
