@@ -4,7 +4,8 @@ document.addEventListener("DOMContentLoaded", function () {
       return urlParams.get(param);
   }
 
-  const tagName = getQueryParam('tabUrl');
+  const tagName = getQueryParam("tabUrl");
+  console.log("Loaded tabUrl:", tagName);
 
   const settingsButton = document.querySelector("#settings-button");
   if (settingsButton) {
@@ -13,70 +14,79 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   }
 
-  const closeButton = document.getElementById('close-button');
+  const closeButton = document.getElementById("close-button");
   if (closeButton) {
-      closeButton.addEventListener('click', function () {
-          parent.postMessage({ action: 'closeSidebar' }, '*'); // 通知关闭
-          window.parent.postMessage({ action: 'sidebarClosed' }, '*');
+      closeButton.addEventListener("click", function () {
+          parent.postMessage({ action: "closeSidebar" }, "*");
+          window.parent.postMessage({ action: "sidebarClosed" }, "*");
       });
   }
 
-  let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || {};
+  let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || {};
+  console.log("Loaded chat history:", chatHistory);
 
-  const chatArea = document.getElementById('chat-area');
+  const chatArea = document.getElementById("chat-area");
   const userInput = document.querySelector("input[type='text']");
   const sendButton = document.querySelector(".send-button");
 
   // 恢复历史记录
   if (chatHistory[tagName]) {
-      chatHistory[tagName].forEach(entry => {
-          const [sender, message] = entry;
-          const messageDiv = document.createElement('div');
-          messageDiv.className = `message ${sender}`;
-          messageDiv.textContent = message;
-          chatArea.appendChild(messageDiv);
+      chatHistory[tagName].forEach(([sender, message]) => {
+          appendMessage(sender, message);
       });
   }
 
+  // 追加消息到聊天框
+  function appendMessage(sender, message) {
+      const messageDiv = document.createElement("div");
+      messageDiv.className = `message ${sender}`;
+      messageDiv.textContent = message;
+      chatArea.appendChild(messageDiv);
+  }
+
   // 获取当前页面的 HTML 内容
-  function getPageHTML() {
+  async function getPageHTML() {
+      console.log("Requesting page HTML...");
       return new Promise((resolve, reject) => {
-          window.addEventListener('message', function handler(event) {
-              if (event.data && event.data.action === 'pageHTML') {
+          const timeout = setTimeout(() => {
+              reject(new Error("Timeout: No response from getPageHTML"));
+          }, 5000); // 超时时间为 5 秒
+
+          window.addEventListener("message", function handler(event) {
+              if (event.data && event.data.action === "pageHTML") {
+                  console.log("HTML Content Retrieved:", event.data.htmlContent.length);
+                  clearTimeout(timeout); // 清除超时
                   resolve(event.data.htmlContent);
-                  window.removeEventListener('message', handler);
+                  window.removeEventListener("message", handler);
               }
           });
-          parent.postMessage({ action: 'getPageHTML' }, '*');
+
+          parent.postMessage({ action: "getPageHTML" }, "*");
       });
   }
 
   // 发送消息逻辑
   if (sendButton) {
       sendButton.addEventListener("click", async function () {
+          console.log("Send button clicked!");
+
           if (!userInput.value.trim()) {
               alert("请输入内容。");
               return;
           }
 
           const userMessage = userInput.value.trim();
-
-          // 显示用户消息
-          const userMessageDiv = document.createElement('div');
-          userMessageDiv.className = 'message user';
-          userMessageDiv.textContent = userMessage;
-          chatArea.appendChild(userMessageDiv);
+          console.log("User input:", userMessage);
 
           // 清空输入框
           userInput.value = "";
 
-          // 更新历史记录
-          if (!chatHistory[tagName]) {
-              chatHistory[tagName] = [];
-          }
-          chatHistory[tagName].push(['user', userMessage]);
+          // 将用户输入消息显示在聊天框
+          appendMessage("user", userMessage);
 
-          const serverAddress = localStorage.getItem('serverAddress');
+          const serverAddress = localStorage.getItem("serverAddress");
+          console.log("Server Address:", serverAddress);
+
           if (!serverAddress) {
               alert("未设置服务地址，请前往设置页面配置。");
               return;
@@ -84,54 +94,54 @@ document.addEventListener("DOMContentLoaded", function () {
 
           try {
               const htmlContent = await getPageHTML();
-              const containHtml = true;
+              console.log("HTML Content Retrieved:", htmlContent);
+
+              if (!htmlContent || htmlContent.length === 0) {
+                  console.error("Failed to retrieve HTML content.");
+                  appendMessage("system", "无法获取页面 HTML 内容。");
+                  return;
+              }
 
               const formData = new FormData();
-              formData.append("contain_html", containHtml);
+              formData.append("contain_html", true);
               formData.append("html_file", new Blob([htmlContent], { type: "text/html" }));
               formData.append("userOrder", userMessage);
+
+              for (let [key, value] of formData.entries()) {
+                  console.log(`FormData entry: ${key} = ${value}`);
+              }
 
               const apiResponse = await fetch(`${serverAddress}/process-task`, {
                   method: "POST",
                   body: formData,
               });
 
+              console.log("Fetch request sent to:", `${serverAddress}/process-task`);
+              console.log("API status code:", apiResponse.status);
+
               if (apiResponse.ok) {
                   const result = await apiResponse.json();
+                  console.log("API Response:", result);
 
                   // 显示系统回复
-                  const systemMessageDiv = document.createElement('div');
-                  systemMessageDiv.className = 'message system';
-                  systemMessageDiv.textContent = result.response || "服务无响应内容。";
-                  chatArea.appendChild(systemMessageDiv);
+                  appendMessage("system", result.response || "服务无响应内容。");
 
                   // 更新历史记录
-                  chatHistory[tagName].push(['system', result.response]);
-                  localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-
-                  if (result.script) {
-                      parent.postMessage({ action: 'executeScript', script: result.script }, '*');
+                  if (!chatHistory[tagName]) {
+                      chatHistory[tagName] = [];
                   }
+                  chatHistory[tagName].push(["system", result.response]);
+                  localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
               } else {
-                  const error = await apiResponse.json();
-                  const errorMessageDiv = document.createElement('div');
-                  errorMessageDiv.className = 'message system';
-                  errorMessageDiv.textContent = `错误: ${error.error}`;
-                  chatArea.appendChild(errorMessageDiv);
+                  const errorDetails = await apiResponse.text();
+                  console.error("API Error Details:", errorDetails);
 
-                  // 更新历史记录
-                  chatHistory[tagName].push(['system', `错误: ${error.error}`]);
-                  localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+                  appendMessage("system", `错误: ${errorDetails}`);
               }
           } catch (error) {
-              const connectionErrorDiv = document.createElement('div');
-              connectionErrorDiv.className = 'message system';
-              connectionErrorDiv.textContent = "无法连接到服务，请检查网络或服务地址。";
-              chatArea.appendChild(connectionErrorDiv);
+              console.error("Fetch Error:", error);
 
-              // 更新历史记录
-              chatHistory[tagName].push(['system', "无法连接到服务，请检查网络或服务地址。"]);
-              localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+              appendMessage("system", "无法连接到服务，请检查网络或服务地址。");
           }
       });
   }
