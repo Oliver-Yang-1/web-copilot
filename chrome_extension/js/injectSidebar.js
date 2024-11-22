@@ -1,5 +1,12 @@
 const SIDEBAR_WIDTH = 400; // 设置侧边栏宽度
 
+function expandSidebar(){
+    requestAnimationFrame(() => {
+        sidebarContainer.style.width = `${SIDEBAR_WIDTH}px`;
+        console.log('Sidebar expanded.');
+    });
+}
+
 function getOrCreateSidebar() {
     let sidebarContainer = document.getElementById('web-copilot-sidebar');
     if (!sidebarContainer) {
@@ -29,12 +36,6 @@ function getOrCreateSidebar() {
         document.body.appendChild(sidebarContainer);
 
         document.body.style.transition = 'margin-right 0.3s ease-in-out';
-        document.body.style.marginRight = `${SIDEBAR_WIDTH}px`;
-
-        requestAnimationFrame(() => {
-            sidebarContainer.style.width = `${SIDEBAR_WIDTH}px`;
-            console.log('Sidebar expanded.');
-        });
 
         window.addEventListener('message', function (event) {
             if (event.data && event.data.action === 'closeSidebar') {
@@ -66,6 +67,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         } else {
             getOrCreateSidebar();
+            expandSidebar();
             console.log('Sidebar created and opened.');
         }
         sendResponse({ success: true });
@@ -74,7 +76,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             // 获取页面 HTML 内容
             const htmlContent = document.documentElement.outerHTML;
             console.log('Sending page HTML content:', htmlContent.length);
-            
+
             // 返回 HTML 内容
             sendResponse({ htmlContent });
         } catch (error) {
