@@ -20,10 +20,9 @@ html, body {
     height: 50px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    padding: 0 16px;
     background-color: #ffffff;
-    color: #333333;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     border-bottom: 1px solid #e0e0e0;
 }

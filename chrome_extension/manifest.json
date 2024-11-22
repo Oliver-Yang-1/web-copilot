@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Web Copilot",
+  "name": "Chrome Copilot",
   "version": "1.2",
   "description": "Extracts HTML and sends to an os-copilot server for processing, can also execute any script from the server.",
   "permissions": [

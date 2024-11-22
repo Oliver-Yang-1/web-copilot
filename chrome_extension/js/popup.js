@@ -1,148 +1,161 @@
 document.addEventListener("DOMContentLoaded", function () {
-  function getQueryParam(param) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
-  }
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
 
-  const tagName = getQueryParam("tabUrl");
-  console.log("Loaded tabUrl:", tagName);
+    const tagName = getQueryParam("tabUrl");
+    console.log("Loaded tabUrl:", tagName);
 
-  const settingsButton = document.querySelector("#settings-button");
-  if (settingsButton) {
-      settingsButton.addEventListener("click", function () {
-          window.location.href = './settings.html?tabUrl=' + encodeURIComponent(tagName);
-      });
-  }
+    const settingsButton = document.querySelector("#settings-button");
+    if (settingsButton) {
+        settingsButton.addEventListener("click", function () {
+            window.location.href = './settings.html?tabUrl=' + encodeURIComponent(tagName);
+        });
+    }
 
-  const closeButton = document.getElementById("close-button");
-  if (closeButton) {
-      closeButton.addEventListener("click", function () {
-          parent.postMessage({ action: "closeSidebar" }, "*");
-          window.parent.postMessage({ action: "sidebarClosed" }, "*");
-      });
-  }
+    const closeButton = document.getElementById("close-button");
+    if (closeButton) {
+        closeButton.addEventListener("click", function () {
+            parent.postMessage({ action: "closeSidebar" }, "*");
+            window.parent.postMessage({ action: "sidebarClosed" }, "*");
+        });
+    }
 
-  let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || {};
-  console.log("Loaded chat history:", chatHistory);
+    let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || {};
+    console.log("Loaded chat history:", chatHistory);
 
-  const chatArea = document.getElementById("chat-area");
-  const userInput = document.querySelector("input[type='text']");
-  const sendButton = document.querySelector(".send-button");
+    const chatArea = document.getElementById("chat-area");
+    const userInput = document.querySelector("input[type='text']");
+    const sendButton = document.querySelector(".send-button");
 
-  // 恢复历史记录
-  if (chatHistory[tagName]) {
-      chatHistory[tagName].forEach(([sender, message]) => {
-          appendMessage(sender, message);
-      });
-  }
+    // 恢复历史记录
+    if (chatHistory[tagName]) {
+        chatHistory[tagName].forEach(([sender, message]) => {
+            appendMessage(sender, message);
+        });
+    }
 
-  // 追加消息到聊天框
-  function appendMessage(sender, message) {
-      const messageDiv = document.createElement("div");
-      messageDiv.className = `message ${sender}`;
-      messageDiv.textContent = message;
-      chatArea.appendChild(messageDiv);
-  }
+    // 追加消息到聊天框
+    function appendMessage(sender, message) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${sender}`;
+        messageDiv.textContent = message;
+        chatArea.appendChild(messageDiv);
+    }
 
-  // 获取当前页面的 HTML 内容
-  async function getPageHTML() {
-      console.log("Requesting page HTML...");
-      return new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => {
-              reject(new Error("Timeout: No response from getPageHTML"));
-          }, 5000); // 超时时间为 5 秒
+    // 获取当前页面的 HTML 内容
+    async function getPageHTML() {
+        try {
+            // 获取当前活动标签页
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (!tab || !tab.id) {
+                throw new Error("无法获取当前活动标签页。");
+            }
 
-          window.addEventListener("message", function handler(event) {
-              if (event.data && event.data.action === "pageHTML") {
-                  console.log("HTML Content Retrieved:", event.data.htmlContent.length);
-                  clearTimeout(timeout); // 清除超时
-                  resolve(event.data.htmlContent);
-                  window.removeEventListener("message", handler);
-              }
-          });
+            // 使用 chrome.scripting.executeScript 获取页面 HTML
+            const [result] = await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: () => document.documentElement.outerHTML
+            });
 
-          parent.postMessage({ action: "getPageHTML" }, "*");
-      });
-  }
+            if (chrome.runtime.lastError) {
+                throw new Error(chrome.runtime.lastError.message);
+            }
 
-  // 发送消息逻辑
-  if (sendButton) {
-      sendButton.addEventListener("click", async function () {
-          console.log("Send button clicked!");
+            return result.result;
+        } catch (error) {
+            throw error;
+        }
+    }
 
-          if (!userInput.value.trim()) {
-              alert("请输入内容。");
-              return;
-          }
+    // 发送消息逻辑
+    if (sendButton) {
+        sendButton.addEventListener("click", async function () {
+            console.log("Send button clicked!");
 
-          const userMessage = userInput.value.trim();
-          console.log("User input:", userMessage);
+            if (!userInput.value.trim()) {
+                alert("请输入内容。");
+                return;
+            }
 
-          // 清空输入框
-          userInput.value = "";
+            const userMessage = userInput.value.trim();
+            console.log("User input:", userMessage);
 
-          // 将用户输入消息显示在聊天框
-          appendMessage("user", userMessage);
+            // 清空输入框
+            userInput.value = "";
 
-          const serverAddress = localStorage.getItem("serverAddress");
-          console.log("Server Address:", serverAddress);
+            // 将用户输入消息显示在聊天框
+            appendMessage("user", userMessage);
 
-          if (!serverAddress) {
-              alert("未设置服务地址，请前往设置页面配置。");
-              return;
-          }
+            const serverAddress = localStorage.getItem("serverAddress");
+            console.log("Server Address:", serverAddress);
 
-          try {
-              const htmlContent = await getPageHTML();
-              console.log("HTML Content Retrieved:", htmlContent);
+            if (!serverAddress) {
+                alert("未设置服务地址，请前往设置页面配置。");
+                return;
+            }
 
-              if (!htmlContent || htmlContent.length === 0) {
-                  console.error("Failed to retrieve HTML content.");
-                  appendMessage("system", "无法获取页面 HTML 内容。");
-                  return;
-              }
+            try {
+                // 获取页面 HTML 内容
+                const htmlContent = await getPageHTML();
+                console.log("HTML Content Retrieved:", htmlContent);
 
-              const formData = new FormData();
-              formData.append("contain_html", true);
-              formData.append("html_file", new Blob([htmlContent], { type: "text/html" }));
-              formData.append("userOrder", userMessage);
+                if (!htmlContent || htmlContent.length === 0) {
+                    console.error("Failed to retrieve HTML content.");
+                    appendMessage("system", "无法获取页面 HTML 内容。");
+                    return;
+                }
 
-              for (let [key, value] of formData.entries()) {
-                  console.log(`FormData entry: ${key} = ${value}`);
-              }
+                const formData = new FormData();
+                formData.append("contain_html", true);
+                formData.append("html_file", new Blob([htmlContent], { type: "text/html" }));
+                formData.append("userOrder", userMessage);
 
-              const apiResponse = await fetch(`${serverAddress}/process-task`, {
-                  method: "POST",
-                  body: formData,
-              });
+                for (let [key, value] of formData.entries()) {
+                    console.log(`FormData entry: ${key} = ${value}`);
+                }
 
-              console.log("Fetch request sent to:", `${serverAddress}/process-task`);
-              console.log("API status code:", apiResponse.status);
+                const apiResponse = await fetch(`${serverAddress}/process-task`, {
+                    method: "POST",
+                    body: formData,
+                });
 
-              if (apiResponse.ok) {
-                  const result = await apiResponse.json();
-                  console.log("API Response:", result);
+                console.log("Fetch request sent to:", `${serverAddress}/process-task`);
+                console.log("API status code:", apiResponse.status);
 
-                  // 显示系统回复
-                  appendMessage("system", result.response || "服务无响应内容。");
+                if (apiResponse.ok) {
+                    const result = await apiResponse.json();
+                    console.log("API Response:", result);
 
-                  // 更新历史记录
-                  if (!chatHistory[tagName]) {
-                      chatHistory[tagName] = [];
-                  }
-                  chatHistory[tagName].push(["system", result.response]);
-                  localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
-              } else {
-                  const errorDetails = await apiResponse.text();
-                  console.error("API Error Details:", errorDetails);
+                    // 显示系统回复
+                    appendMessage("system", result.response || "服务无响应内容。");
 
-                  appendMessage("system", `错误: ${errorDetails}`);
-              }
-          } catch (error) {
-              console.error("Fetch Error:", error);
+                    // 更新历史记录
+                    if (!chatHistory[tagName]) {
+                        chatHistory[tagName] = [];
+                    }
+                    chatHistory[tagName].push(["system", result.response]);
+                    localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
 
-              appendMessage("system", "无法连接到服务，请检查网络或服务地址。");
-          }
-      });
-  }
+                    // 如果返回了脚本，则执行它
+                    if (result.script) {
+                        await chrome.scripting.executeScript({
+                            target: { tabId: tab.id },
+                            func: new Function(result.script)
+                        });
+                    }
+                } else {
+                    const errorDetails = await apiResponse.text();
+                    console.error("API Error Details:", errorDetails);
+
+                    appendMessage("system", `错误: ${errorDetails}`);
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+
+                appendMessage("system", "无法连接到服务，请检查网络或服务地址。");
+            }
+        });
+    }
 });
