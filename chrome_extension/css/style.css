@@ -39,12 +39,17 @@ html, body {
 
 .header .settings-button,
 .header .close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     height: 30px;
     width: 30px;
-    border-radius: 20%;
+    border-radius: 50%;
     cursor: pointer;
     color: #666666;
-    margin-left: 8px;
+    margin-right: 8px; /* 微调间距 */
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 添加阴影 */
 }
 
 .header .close-button:hover {
@@ -78,15 +83,15 @@ html, body {
 }
 
 .chat-area .message.system {
-    background-color: #0078d7;
-    color: white;
-    align-self: flex-start;
+    background-color: transparent; /* 更改为浅灰色背景 */
+    color: #333333;
+    align-self: flex-start; /* 靠左显示 */
 }
 
 .chat-area .message.user {
-    background-color: #e0e0e0;
-    color: #333333;
-    align-self: flex-end;
+    background-color: #0078d7; /* 蓝色背景 */
+    color: white;
+    align-self: flex-end; /* 靠右显示 */
 }
 
 /* Floating input box styles */

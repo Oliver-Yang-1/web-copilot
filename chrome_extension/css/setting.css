@@ -29,6 +29,7 @@
 
 .header .title {
     flex-grow: 1;
+    margin-left: 8px;
 }
 
 .header .back-button {
