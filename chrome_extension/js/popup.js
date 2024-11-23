@@ -87,6 +87,8 @@ document.addEventListener("DOMContentLoaded", function () {
         appendMessage("user", userMessage);
 
         const serverAddress = localStorage.getItem("serverAddress");
+        const useLightFriday = localStorage.getItem('useLightFriday') === 'true';
+        const sessionList = localStorage.getItem('sessionList');
         console.log("Server Address:", serverAddress);
 
         if (!serverAddress) {
@@ -109,6 +111,10 @@ document.addEventListener("DOMContentLoaded", function () {
             formData.append("contain_html", true);
             formData.append("html_file", new Blob([htmlContent], { type: "text/html" }));
             formData.append("userOrder", userMessage);
+
+            formData.append("session_list", sessionList || "[]"); // Default to an empty array in JSON string format if not set
+            formData.append("use_light_friday", useLightFriday); // Append useLightFriday as a boolean
+
 
             for (let [key, value] of formData.entries()) {
                 console.log(`FormData entry: ${key} = ${value}`);
