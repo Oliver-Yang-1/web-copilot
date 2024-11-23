@@ -14,6 +14,74 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    const scriptHubButton = document.getElementById("script-hub-button");
+    const modal = document.getElementById("script-modal");
+    const closeModalButton = document.getElementById("modal-close");
+    const runScriptButton = document.getElementById("run-script-button");
+    const scriptNameInput = document.getElementById("script-name");
+
+    // Show the modal when the script hub button is clicked
+    scriptHubButton.addEventListener("click", () => {
+        modal.style.display = "block";
+    });
+
+    // Close the modal when the close button is clicked
+    closeModalButton.addEventListener("click", () => {
+        modal.style.display = "none";
+    });
+
+    // Close the modal when clicking outside the modal content
+    window.addEventListener("click", (event) => {
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
+    });
+
+    async function executeScript(scriptName) {
+        try {
+            // Ensure scriptName ends with '.js'
+            if (!scriptName.endsWith(".js")) {
+                scriptName += ".js";
+            }
+
+            // Get the currently active tab
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+            if (!tab || !tab.id) {
+                throw new Error("No active tab found.");
+            }
+
+            // Construct the script path
+            const scriptPath = `js/auto_gen/${scriptName}`;
+
+            // Inject and execute the script
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: [scriptPath],
+            });
+
+            console.log(`Script "${scriptName}" executed successfully.`);
+            alert(`Script "${scriptName}" executed successfully!`);
+        } catch (error) {
+            console.error(`Error running script "${scriptName}":`, error);
+            alert(`Failed to execute script "${scriptName}". Check the console for details.`);
+        }
+    }
+
+
+
+    // Run the script when the "Run" button is clicked
+    runScriptButton.addEventListener("click", () => {
+        const scriptName = scriptNameInput.value.trim();
+
+        if (scriptName) {
+            console.log(`Running script: ${scriptName}`);
+            executeScript(scriptName); // Call the function to execute the script
+        } else {
+            alert("Please enter a script name.");
+        }
+    });
+
     const closeButton = document.getElementById("close-button");
     if (closeButton) {
         closeButton.addEventListener("click", function () {
@@ -142,13 +210,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 chatHistory[tagName].push(["system", result.response]);
                 localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
 
-                // 如果返回了脚本，则执行它
-                if (result.script) {
-                    await chrome.scripting.executeScript({
-                        target: { tabId: tab.id },
-                        func: new Function(result.script)
-                    });
-                }
             } else {
                 const errorDetails = await apiResponse.text();
                 console.error("API Error Details:", errorDetails);

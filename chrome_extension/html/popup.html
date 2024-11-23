@@ -16,6 +16,7 @@
         <img src="../icons/icon16.png" alt="Logo" />
       </div>
       <div class="title">Chrome Copilot</div>
+      <div class="script-hub-button" id="script-hub-button"><i class="fas fa-file-code"></i></div>
       <div class="settings-button" id="settings-button"><i class="fas fa-cog"></i></div>
       <div class="close-button" id="close-button"><i class="fas fa-times"></i></div>
     </div>
@@ -32,6 +33,17 @@
       <input type="text" id="user-input" placeholder="Message Copilot" />
       <button class="icon-button" id="microphone-button"><i class="fas fa-microphone"></i></button>
       <button class="send-button" id="send-button"><i class="fas fa-paper-plane"></i></button>
+    </div>
+    <!-- Modal for script hub -->
+    <div id="script-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-button" id="modal-close">&times;</span>
+        <h2>Run Script</h2>
+        <div class="modal-body">
+          <input id="script-name" placeholder="Enter script name..." />
+          <button id="run-script-button">Run</button>
+        </div>
+      </div>
     </div>
   </div>
 </body>
