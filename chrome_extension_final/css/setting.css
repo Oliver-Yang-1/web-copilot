@@ -1,0 +1,242 @@
+/* setting.css */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.settings-container {
+    width: 100%;
+    height: 100%;
+    background-color: #f4f4f4;
+    color: #333333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    background-color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.header .title {
+    flex-grow: 1;
+    margin-left: 8px;
+}
+
+.header .back-button {
+    cursor: pointer;
+}
+
+.settings-content {
+    flex: 1;
+    padding: 16px;
+}
+
+.settings-item {
+    margin-bottom: 16px;
+}
+
+.settings-item label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #666666;
+}
+
+.settings-item input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #cccccc;
+    border-radius: 24px;
+    background-color: #ffffff;
+    color: #333333;
+    font-size: 14px;
+    outline: none;
+}
+
+.settings-item input::placeholder {
+    color: #999999;
+}
+
+.settings-item input:focus {
+    border-color: #0078d7;
+}
+
+button#save-button {
+    width: 100%;
+    padding: 12px 0;
+    border: none;
+    border-radius: 24px;
+    background-color: #0078d7;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button#save-button:hover {
+    background-color: #005a9e;
+}
+/* Session List */
+#session-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+    width: 100%; /* Ensure the list takes full width of the container */
+    overflow-x: hidden; /* Prevent horizontal overflow */
+}
+
+#session-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Ensure proper spacing between elements */
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Ensure the list item stays within the container width */
+    box-sizing: border-box; /* Include padding and border in width calculation */
+}
+
+/* Align session name and value */
+#session-list li .session-name {
+    flex: 0 0 20%; /* Occupy 20% of the line */
+    font-weight: bold;
+    color: #555;
+    text-align: left;
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden; /* Prevent overflow */
+    text-overflow: ellipsis; /* Add ellipsis for overflowed text */
+}
+
+#session-list li .session-value {
+    flex: 1; /* Let the value take the remaining space */
+    text-align: left;
+    color: #333;
+    word-break: break-word; /* Break words if they are too long */
+    padding-right: 10px; /* Add padding for spacing from the delete button */
+}
+
+/* Buttons */
+#session-list li button {
+    flex-shrink: 0; /* Prevent the button from shrinking */
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 10px; /* Adjust padding for better fit */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#session-list li button:hover {
+    background-color: #0056b3;
+}
+
+/* Add Session Input Fields */
+.add-session-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%; /* Take full width of the container */
+    box-sizing: border-box; /* Prevent overflow */
+}
+
+.add-session-container input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+}
+
+.add-session-container .btn-add {
+    flex: 0 0 auto;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.add-session-container .btn-add:hover {
+    background-color: #0056b3;
+}
+
+/* Custom Checkbox Styling */ 
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: #333333;
+    position: relative;
+    padding-left: 30px; /* Space for the custom checkbox */
+    user-select: none; /* Disable text selection when clicking */
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0; /* Hide the default checkbox */
+    cursor: pointer;
+}
+
+.checkbox-container .checkmark {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    height: 20px;
+    width: 20px;
+    background-color: #f4f4f4;
+    border: 2px solid #ccc;
+    border-radius: 4px; /* Rounded corners for a modern look */
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center the content both horizontally and vertically */
+}
+
+/* Add checkmark for checked state */
+.checkbox-container input:checked ~ .checkmark {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.checkbox-container .checkmark:after {
+    content: "";
+    position: absolute;
+    width: 6px; /* Width of the checkmark */
+    height: 10px; /* Height of the checkmark */
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    display: none;
+}
+
+/* Show checkmark when checked */
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+    position: relative; /* Ensure it is positioned relative to the flex container */
+    transform: rotate(45deg); /* Keep the checkmark rotated */
+}
