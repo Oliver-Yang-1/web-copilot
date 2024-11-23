@@ -6,6 +6,7 @@ html, body {
 }
 
 .popup-container {
+    font-family: 'Poppins', sans-serif;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -63,14 +64,14 @@ html, body {
 .chat-area {
     flex: 1;
     overflow-y: auto;
-    background-color: #ffffff; 
     display: flex;
     flex-direction: column;
     gap: 10px;
     padding: 20px;
     box-sizing: border-box;
     height: calc(100% - 60px);
-    background: #f7f4f2;
+    background: linear-gradient(180deg, #f8f4f2, #faefe4); /* 渐变背景 */
+    border-radius: 12px;
 }
 
 .chat-area .message {
@@ -85,12 +86,15 @@ html, body {
     background-color: transparent; /* 更改为浅灰色背景 */
     color: #333333;
     align-self: flex-start; /* 靠左显示 */
+    text-align: justify;
 }
 
 .chat-area .message.user {
-    background-color: #0078d7; /* 蓝色背景 */
-    color: white;
+    background-color: #ffeed2; /* 用户消息橙色背景 */
+    color: #454444; /* 字体颜色 */
     align-self: flex-end; /* 靠右显示 */
+    text-align: justify;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Floating input box styles */
@@ -118,6 +122,7 @@ html, body {
 .floating-input input {
     flex: 1;
     height: 40px;
+    font-family: 'Poppins', sans-serif;
     padding: 0 16px;
     border: none;
     background-color: #ffffff;
@@ -181,4 +186,29 @@ html, body {
 .chat-area::-webkit-scrollbar-thumb {
     background-color: #cccccc;
     border-radius: 4px;
+}
+
+#chat-intro {
+    position: absolute; /* 使用绝对定位来居中 */
+    top: 50%;           /* 垂直居中 */
+    left: 50%;          /* 水平居中 */
+    transform: translate(-50%, -50%); /* 通过平移调整元素中心 */
+    font-size: 28px;
+    color: #121212;
+    text-align: center;
+    font-weight: bold;
+    display: inline-block; /* 使文字在一行内显示 */
+    white-space: nowrap;   /* 防止文字换行 */
+    overflow: hidden;      /* 隐藏溢出的部分 */
+    width: 0;              /* 初始时宽度为0，确保文本隐藏 */
+    animation: typing 2s steps(30) 1s forwards; /* 逐字显示，设置较快的显示速度 */
+}
+
+@keyframes typing {
+    from {
+        width: 0; /* 初始时文本宽度为0 */
+    }
+    to {
+        width: 100%; /* 动画结束时宽度为100%，显示完整文本 */
+    }
 }

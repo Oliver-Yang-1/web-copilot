@@ -26,23 +26,96 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Loaded chat history:", chatHistory);
 
     const chatArea = document.getElementById("chat-area");
+    const chatIntro = document.getElementById("chat-intro");
     const userInput = document.querySelector("input[type='text']");
     const sendButton = document.querySelector(".send-button");
+    const addButton = document.getElementById("add-button");
+    const fileInput = document.createElement("input");
 
-    // 恢复历史记录
-    if (chatHistory[tagName]) {
-        chatHistory[tagName].forEach(([sender, message]) => {
-            appendMessage(sender, message);
-        });
+    // 设置隐藏的文件输入框
+    fileInput.type = "file";
+    fileInput.style.display = "none";
+    document.body.appendChild(fileInput);
+
+    // 每次点击插件按钮时重置聊天区并显示 "What can I do for you"
+    function resetChat() {
+        // 清空聊天记录
+        chatArea.innerHTML = '';
+        chatIntro.style.display = "block";  // 显示提示信息
+        chatIntro.textContent = "What can I do for you?";
+        // 触发动画
+        chatIntro.style.animation = "none"; // 先清除动画
+        chatIntro.offsetHeight; // 强制回流
+        chatIntro.style.animation = "fadeIn 2s ease-out"; // 重新启动动画
     }
+
+    // 监听插件按钮的点击事件来重置聊天
+    chrome.runtime.onMessage.addListener((request) => {
+        if (request.action === 'toggleSidebar') {
+            resetChat();
+        }
+    });
 
     // 追加消息到聊天框
     function appendMessage(sender, message) {
+        // 移除初始的提示
+        chatIntro.style.display = "none";
+
         const messageDiv = document.createElement("div");
         messageDiv.className = `message ${sender}`;
         messageDiv.textContent = message;
         chatArea.appendChild(messageDiv);
+        chatArea.scrollTop = chatArea.scrollHeight; // 滚动到底部
     }
+
+    // 追加文件到聊天框
+    function appendFileMessage(sender, fileName, fileUrl) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${sender}`;
+
+        const link = document.createElement("a");
+        link.href = fileUrl;
+        link.download = fileName; // 提供下载功能
+        link.textContent = `📎 ${fileName}`;
+        link.style.color = "#0078d7";
+        link.style.textDecoration = "none";
+        link.style.fontWeight = "bold";
+
+        messageDiv.appendChild(link);
+        chatArea.appendChild(messageDiv);
+        chatArea.scrollTop = chatArea.scrollHeight; // 滚动到底部
+    }
+
+    // 点击加号按钮触发文件选择
+    addButton.addEventListener("click", () => {
+        fileInput.click();
+    });
+
+    // 文件选择完成后处理
+    fileInput.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const fileType = file.type;
+            const reader = new FileReader();
+
+            reader.onload = () => {
+                const fileName = file.name;
+                const fileUrl = reader.result;
+
+                // 显示文件到聊天框
+                appendFileMessage("user", fileName, fileUrl);
+
+                // 更新历史记录
+                if (!chatHistory[tagName]) {
+                    chatHistory[tagName] = [];
+                }
+                chatHistory[tagName].push(["user", `📎 ${fileName}`]);
+                localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+            };
+
+            reader.readAsDataURL(file); // 读取文件为 Base64 数据
+        }
+    });
 
     // 获取当前页面的 HTML 内容
     async function getPageHTML() {
@@ -69,7 +142,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    async function sendMessage(){
+    // 发送消息逻辑
+    async function sendMessage() {
         console.log("Send button clicked!");
 
         if (!userInput.value.trim()) {
@@ -87,8 +161,6 @@ document.addEventListener("DOMContentLoaded", function () {
         appendMessage("user", userMessage);
 
         const serverAddress = localStorage.getItem("serverAddress");
-        const useLightFriday = localStorage.getItem('useLightFriday') === 'true';
-        const sessionList = localStorage.getItem('sessionList');
         console.log("Server Address:", serverAddress);
 
         if (!serverAddress) {
@@ -111,10 +183,6 @@ document.addEventListener("DOMContentLoaded", function () {
             formData.append("contain_html", true);
             formData.append("html_file", new Blob([htmlContent], { type: "text/html" }));
             formData.append("userOrder", userMessage);
-
-            formData.append("session_list", sessionList || "[]"); // Default to an empty array in JSON string format if not set
-            formData.append("use_light_friday", useLightFriday); // Append useLightFriday as a boolean
-
 
             for (let [key, value] of formData.entries()) {
                 console.log(`FormData entry: ${key} = ${value}`);
@@ -162,15 +230,16 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // 发送消息逻辑
+    // 监听“回车”键
+    userInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();  // 防止回车换行
+            sendMessage();
+        }
+    });
+
+    // 发送按钮点击
     if (sendButton) {
         sendButton.addEventListener("click", sendMessage);
-    }
-    if (userInput) {
-        userInput.addEventListener("keypress", function (event) {
-            if (event.key === "Enter") {
-                sendMessage();
-            }
-        });
     }
 });

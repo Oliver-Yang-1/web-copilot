@@ -1,12 +1,6 @@
 const SIDEBAR_WIDTH = 400; // 设置侧边栏宽度
 
-function expandSidebar(){
-    requestAnimationFrame(() => {
-        sidebarContainer.style.width = `${SIDEBAR_WIDTH}px`;
-        console.log('Sidebar expanded.');
-    });
-}
-
+// 创建或获取侧边栏
 function getOrCreateSidebar() {
     let sidebarContainer = document.getElementById('web-copilot-sidebar');
     if (!sidebarContainer) {
@@ -35,8 +29,16 @@ function getOrCreateSidebar() {
         sidebarContainer.appendChild(iframe);
         document.body.appendChild(sidebarContainer);
 
+        // 添加过渡效果
         document.body.style.transition = 'margin-right 0.3s ease-in-out';
+        document.body.style.marginRight = `${SIDEBAR_WIDTH}px`;
 
+        requestAnimationFrame(() => {
+            sidebarContainer.style.width = `${SIDEBAR_WIDTH}px`;
+            console.log('Sidebar expanded.');
+        });
+
+        // 监听关闭侧边栏的消息
         window.addEventListener('message', function (event) {
             if (event.data && event.data.action === 'closeSidebar') {
                 console.log('Received closeSidebar message.');
@@ -45,67 +47,38 @@ function getOrCreateSidebar() {
             }
         });
     } else {
-        console.log('Sidebar already exists.');
+        // 如果侧边栏已存在，刷新 iframe 内容
+        const iframe = sidebarContainer.querySelector('iframe');
+        iframe.src = chrome.runtime.getURL('html/popup.html') + '?tabUrl=' + encodeURIComponent(window.location.href);
+        sidebarContainer.style.width = `${SIDEBAR_WIDTH}px`;
+        document.body.style.marginRight = `${SIDEBAR_WIDTH}px`;
+        console.log('Sidebar content refreshed and expanded.');
     }
     return sidebarContainer;
 }
 
+// 监听来自 background.js 或 popup.js 的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log('Received message:', request);
 
     if (request.action === 'toggleSidebar') {
         const sidebar = document.getElementById('web-copilot-sidebar');
         if (sidebar) {
-            if (sidebar.style.width === '0px' || sidebar.style.width === '') {
-                sidebar.style.width = `${SIDEBAR_WIDTH}px`;
-                document.body.style.marginRight = `${SIDEBAR_WIDTH}px`;
-                console.log('Sidebar opened.');
-            } else {
+            // 判断侧边栏是否已经展开，决定是展开还是收起
+            const isOpen = sidebar.style.width !== '0px' && sidebar.style.width !== '';
+            if (isOpen) {
                 sidebar.style.width = '0';
                 document.body.style.marginRight = '0';
                 console.log('Sidebar closed.');
+            } else {
+                getOrCreateSidebar();
+                console.log('Sidebar opened.');
             }
         } else {
             getOrCreateSidebar();
-            expandSidebar();
             console.log('Sidebar created and opened.');
         }
         sendResponse({ success: true });
-    } else if (request.action === 'getPageHTML') {
-        try {
-            // 获取页面 HTML 内容
-            const htmlContent = document.documentElement.outerHTML;
-            console.log('Sending page HTML content:', htmlContent.length);
-
-            // 返回 HTML 内容
-            sendResponse({ htmlContent });
-        } catch (error) {
-            console.error('Error retrieving HTML content:', error);
-            sendResponse({ error: 'Failed to retrieve page HTML content.' });
-        }
     }
-    return true; // 标记为异步响应，确保消息返回
+    return true; // 保证异步消息响应
 });
-
-// 新增的监听器：用于处理 popup.js 中的消息通信
-window.addEventListener('message', function (event) {
-    if (event.data && event.data.action === 'getPageHTML') {
-        console.log('Received getPageHTML request from popup.js');
-        try {
-            const htmlContent = document.documentElement.outerHTML;
-            console.log('Returning HTML content length:', htmlContent.length);
-
-            // 将 HTML 内容通过消息发送回 popup.js
-            window.postMessage({ action: 'pageHTML', htmlContent: htmlContent }, '*');
-        } catch (error) {
-            console.error('Error processing getPageHTML:', error);
-            window.postMessage({ action: 'pageHTML', error: 'Failed to retrieve HTML content.' }, '*');
-        }
-    }
-});
-
-if (!document.getElementById('web-copilot-sidebar')) {
-    getOrCreateSidebar();
-} else {
-    console.log('Sidebar already initialized.');
-}

@@ -1,4 +1,3 @@
-// background.js
 chrome.action.onClicked.addListener(() => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const activeTab = tabs[0];
@@ -24,9 +23,11 @@ chrome.action.onClicked.addListener(() => {
             },
             () => {
               if (chrome.runtime.lastError) {
-                console.error('Script injection failed: ', chrome.runtime.lastError);
+                console.error('Script injection failed:', chrome.runtime.lastError);
               } else {
                 console.log('Sidebar injected successfully.');
+                // 发送 toggleSidebar 消息，确保侧边栏显示
+                chrome.tabs.sendMessage(activeTab.id, { action: 'toggleSidebar' });
               }
             }
           );
