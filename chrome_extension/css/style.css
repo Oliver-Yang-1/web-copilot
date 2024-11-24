@@ -220,12 +220,14 @@ html, body {
 /* Modal content */
 .modal-content {
     background-color: #fff;
-    margin: 15% auto; /* Center the modal */
+    margin: auto; /* Center the modal horizontally and vertically */
     padding: 20px;
     border-radius: 10px;
-    width: 50%;
+    width: 90%; /* Adjust width for smaller screens */
+    max-width: 500px; /* Set a max width for larger screens */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     text-align: center;
+    position: relative; /* Ensure proper positioning inside the modal */
 }
 
 /* Close button */
@@ -249,15 +251,20 @@ html, body {
     align-items: center;
     gap: 10px; /* Space between input and button */
     justify-content: center;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
 }
+
 
 /* Input field styles */
 #script-name {
     flex: 1;
+    min-width: 60%; /* Ensure the input doesn't shrink too much */
+    max-width: 100%; /* Ensure it doesn't exceed the modal width */
     padding: 10px;
     font-size: 16px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    box-sizing: border-box; /* Include padding in width calculation */
 }
 
 /* Run button styles */
@@ -269,6 +276,7 @@ html, body {
     font-size: 16px;
     border-radius: 5px;
     cursor: pointer;
+    box-sizing: border-box; /* Ensure proper alignment with input */
 }
 
 #run-script-button:hover {
