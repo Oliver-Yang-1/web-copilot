@@ -154,6 +154,14 @@ document.addEventListener("DOMContentLoaded", function () {
         // 将用户输入消息显示在聊天框
         appendMessage("user", userMessage);
 
+        // 更新历史记录
+        if (!chatHistory[tagName]) {
+            chatHistory[tagName] = [];
+        }
+        chatHistory[tagName].push(["user",userMessage]);
+        localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+
+
         const serverAddress = localStorage.getItem("serverAddress");
         const useLightFriday = localStorage.getItem('useLightFriday') === 'true';
         const sessionList = localStorage.getItem('sessionList');
