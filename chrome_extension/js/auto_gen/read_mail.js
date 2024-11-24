@@ -119,13 +119,13 @@ function delay(ms) {
 }
 
 function getDroplist() {
-  const xpath = "/html/body/div[@id='app']/div[@id='appContainer']/div[@class='Flvp1 customScrollBar']/div[@id='mainApp']//div[@id='MainModule']//div[@id='跳到邮件列表-region']//button[@id='mailListFilterMenu']";
+  const xpath = "/html/body/div[@id='app']/div[@id='appContainer']//div[@id='mainApp']//div[@id='MainModule']//div[@id='跳到邮件列表-region']//button[@id='mailListFilterMenu']";
   clickElement(xpath);
 }
 
 function selectUnread() {
   // Define the new XPath
-  const newXPath = "/html/body//div/div[@class='fui-MenuItem r11normc fui-MenuItemRadio G2L1A'][2]/span/span[@class='UagSo']";
+  const newXPath = "/html/body//div/div[contains(@class, 'fui-MenuItem')][2]/span/span[@class='UagSo']";
   clickElement(newXPath);
 }
 
@@ -136,8 +136,8 @@ function clickFirstMail() {
 
 
 function extractContentAndLog() {
-  const xpath = "/html/body/div[@id='app']/div[@id='appContainer']/div[@class='Flvp1 customScrollBar']/div[@id='mainApp']//div[@id='ReadingPaneContainerId']//div[@id='ConversationReadingPaneContainer']//div[contains(@class, 'allowTextSelection')]/div";
-  const author_xpath = "//div[@id='app']/div[@id='appContainer']//div[@id='mainApp']//div[@id='MainModule']//div[@id='跳到邮件-region']/div[@id='ReadingPaneContainerId']//div[@class='wide-content-host']/div[@id='focused']//span[@class='OZZZK']"
+  const xpath = "//div[@id='mainApp']//div[@id='ReadingPaneContainerId']//div[@id='ConversationReadingPaneContainer']//div[contains(@class, 'allowTextSelection')]/div";
+  const author_xpath = "//div[@id='mainApp']//div[@id='MainModule']//div[@id='跳到邮件-region']/div[@id='ReadingPaneContainerId']//div[@class='wide-content-host']/div[@id='focused']//span[@class='OZZZK']"
   // Use document.evaluate to find all matching elements
   // Prepare the object to store title and content
   let extractedData = {
