@@ -1,8 +1,8 @@
 # AI HTML Extractor Chrome Extension and Server
 
 ## Project Overview
-This project includes a Chrome extension to extract HTML and send user orders to an AI-powered server. The server processes the HTML and orders, returning responses and scripts as needed.
-there are two versions `chrome_extension` have more functions, `chrome_extension_improve` have a good looking display but less functions.
+This project includes a Chrome extension to extract HTML and send user orders to an AI-powered server. The server processes the HTML and orders, returning responses and scripts as needed.  
+There are two versions `chrome_extension` have more functions, `chrome_extension_improve` have a good looking display but less functions.
 
 ## Project Structure
 
